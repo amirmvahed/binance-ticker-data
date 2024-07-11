@@ -82,6 +82,7 @@ const TickerTable: React.FC = () => {
         }
 
         websocketManager.setMessageListener(handleData)
+        websocketManager.subscribe(streamName)
 
         // Clean up
         return () => {

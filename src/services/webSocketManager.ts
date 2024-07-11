@@ -66,7 +66,19 @@ export class WebSocketManager {
         });
     }
 
-    public setMessageListener(listener) {
+
+    public async subscribe(streamName) {
+        await this.waitForOpenConnection()
+        const message = {
+            method: 'SUBSCRIBE',
+            params: [streamName],
+            id: this.idCounter++
+        }
+
+        this.socket?.send(JSON.stringify(message))
+    }
+
+    public setMessageListener(listener: MessageListener) {
         this.messageListener = listener
     }
 
