@@ -83,10 +83,11 @@ const TickerTable: React.FC = () => {
         }
 
         websocketManager.setMessageListener(handleData)
-        websocketManager.subscribe(streamName)
+        websocketManager.triggerSubscription(streamName, 'SUBSCRIBE')
 
         // Clean up
         return () => {
+            websocketManager.triggerSubscription(streamName, 'UNSUBSCRIBE')
             websocketManager.removeMessageListener()
         }
 

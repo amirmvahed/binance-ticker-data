@@ -91,11 +91,10 @@ export class WebSocketManager {
         });
     }
 
-
-    public async subscribe(streamName) {
+    public async triggerSubscription(streamName, triggerKey) {
         await this.waitForOpenConnection()
         const message = {
-            method: 'SUBSCRIBE',
+            method: triggerKey,
             params: [streamName],
             id: this.idCounter++
         }
