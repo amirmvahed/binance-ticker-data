@@ -52,11 +52,25 @@ export class WebSocketManager {
 
     }
 
+    private waitForOpenConnection(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            if (!this.socket) {
+                return reject(new Error('WebSocket connection not initialized'));
+            }
+
+            if (this.socket.readyState === WebSocket.OPEN) {
+                resolve();
+            } else if (this.socket.readyState === WebSocket.CLOSED || this.socket.readyState === WebSocket.CLOSING) {
+                reject(new Error("WebSocket connection is closed"));
+            }
+        });
+    }
+
     public setMessageListener(listener) {
         this.messageListener = listener
     }
 
-    public removeMessageListener(listener) {
+    public removeMessageListener() {
         this.messageListener = null
     }
 
