@@ -24,25 +24,6 @@ export class WebSocketManager {
             );
         }
 
-        this.socket.onclose = (event) => {
-            console.log(
-                '%cVaaay Connection Kooshte Shood!',
-                'color: red; font-family: sans-serif; font-size: 1rem;', event.reason
-            );
-
-            WebSocketManager.activeConnections = Math.max(WebSocketManager.activeConnections - 1, 0)
-            // reconnect after a delay
-            setTimeout(() => this.connect(), 5000)
-        }
-
-        this.socket.onerror = (error) => {
-            console.log(
-                '%cConnection Baz Shoood!',
-                'color: green; font-family: sans-serif; font-size: 1rem;', error
-            );
-        }
-
-
         this.socket.onmessage = (event) => {
             const data: Ticker[] = JSON.parse(event.data)
             if (this.messageListener) {
@@ -70,14 +51,42 @@ export class WebSocketManager {
         }
 
         return new Promise((resolve, reject) => {
-            if (!this.socket) {
-                return reject(new Error('WebSocket connection not initialized'));
-            }
-
-            if (this.socket.readyState === WebSocket.OPEN) {
+            const handleOpen = () => {
+                cleanup();
                 resolve();
-            } else if (this.socket.readyState === WebSocket.CLOSED || this.socket.readyState === WebSocket.CLOSING) {
+            };
+
+            const handleError = (error: Event) => {
+                cleanup();
+                reject(new Error("WebSocket error occurred"));
+            };
+
+            const handleClose = () => {
+                cleanup();
+                reject(new Error("WebSocket connection closed"));
+            };
+
+            const timeout = setTimeout(() => {
+                cleanup();
+                reject(new Error("WebSocket connection timeout"));
+            }, 10000); // 10 seconds timeout
+
+            const cleanup = () => {
+                clearTimeout(timeout);
+                this.socket!.removeEventListener('open', handleOpen);
+                this.socket!.removeEventListener('error', handleError);
+                this.socket!.removeEventListener('close', handleClose);
+            };
+
+            if (this.socket!.readyState === WebSocket.OPEN) {
+                resolve();
+            } else if (this.socket!.readyState === WebSocket.CLOSED || this.socket!.readyState === WebSocket.CLOSING) {
+                cleanup();
                 reject(new Error("WebSocket connection is closed"));
+            } else {
+                this.socket!.addEventListener('open', handleOpen);
+                this.socket!.addEventListener('error', handleError);
+                this.socket!.addEventListener('close', handleClose);
             }
         });
     }
