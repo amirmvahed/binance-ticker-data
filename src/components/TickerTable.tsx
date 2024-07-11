@@ -62,8 +62,8 @@ const Text = styled.span`
   font-size: 1rem;
 `
 
-const PriceChange = styled('span')<{ positive: boolean }>`
-  color: ${({positive}) => (positive ? 'green' : 'red')};
+const PriceChange = styled('span')<{ positive: string }>`
+  color: ${({positive}) => (positive === 'true' ? 'green' : 'red')};
   margin: 8px 0;
   display: inline-block;
   font-size: 1rem;
@@ -116,7 +116,7 @@ const TickerTable: React.FC = () => {
                                     <Td>
                                         {ticker.c}
                                         <br/>
-                                        <PriceChange positive={parseFloat(ticker.P) >= 0}>
+                                        <PriceChange positive={String(parseFloat(ticker.P) >= 0)}>
                                             {ticker.P}%
                                         </PriceChange>
                                     </Td>
