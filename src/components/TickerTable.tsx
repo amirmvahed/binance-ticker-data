@@ -1,5 +1,7 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import styled from 'styled-components'
+import {WebSocketManager} from "../services/webSocketManager";
+import {Ticker} from "../types";
 
 const Container = styled.div`
   border-radius: 8px;
@@ -66,15 +68,28 @@ const PriceChange = styled('span')<{ positive: boolean }>`
   font-size: 1rem;
 `
 
-type Ticker = {
-    s: string; // Symbol
-    c: string; // Last price
-    P: string; // Price change percent
-}
-
 const TickerTable: React.FC = () => {
     const [tickers, setTickers] = useState<Ticker[]>([])
 
+
+    useEffect(() => {
+        const websocketManager = new WebSocketManager('wss://fstream.binance.com/ws')
+
+        const handleData = (data: Ticker[]) => {
+            if (Array.isArray(data)) {
+                setTickers(data)
+            }
+        }
+
+        websocketManager.setMessageListener(handleData)
+
+        // Clean up
+        return () => {
+            websocketManager.removeMessageListener()
+        }
+
+
+    },[])
 
     return (
         <Container>
