@@ -1,4 +1,4 @@
-import React, {Fragment, useState} from 'react';
+import React, {useState} from 'react';
 import styled from 'styled-components'
 
 const Container = styled.div`
@@ -78,30 +78,32 @@ const TickerTable: React.FC = () => {
 
     return (
         <Container>
-            <tbody>
-            {
-                tickers.map(ticker => {
-                    return (
-                        <Tr key={ticker.s}>
-                            <Td>
-                                {ticker.s}
-                                <br/>
-                                <Text>
-                                    Perpetual
-                                </Text>
-                            </Td>
-                            <Td>
-                                {ticker.c}
-                                <br/>
-                                <PriceChange positive={parseFloat(ticker.P) >= 0}>
-                                    {ticker.P}%
-                                </PriceChange>
-                            </Td>
-                        </Tr>
-                    )
-                })
-            }
-            </tbody>
+            <Table>
+                <tbody>
+                {
+                    tickers.map(ticker => {
+                        return (
+                            <Tr key={ticker.s}>
+                                <Td>
+                                    {ticker.s}
+                                    <br/>
+                                    <Text>
+                                        Perpetual
+                                    </Text>
+                                </Td>
+                                <Td>
+                                    {ticker.c}
+                                    <br/>
+                                    <PriceChange positive={parseFloat(ticker.P) >= 0}>
+                                        {ticker.P}%
+                                    </PriceChange>
+                                </Td>
+                            </Tr>
+                        )
+                    })
+                }
+                </tbody>
+            </Table>
         </Container>
     );
 };
