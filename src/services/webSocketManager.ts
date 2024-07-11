@@ -7,7 +7,7 @@ export class WebSocketManager {
 
     private socket: WebSocket | null = null;
     private idCounter: number = 1;
-    private messageListener: MessageListener;
+    private messageListener: MessageListener | null = null
 
 
     private constructor(private url: string) {
@@ -56,7 +56,7 @@ export class WebSocketManager {
                 resolve();
             };
 
-            const handleError = (error: Event) => {
+            const handleError = () => {
                 cleanup();
                 reject(new Error("WebSocket error occurred"));
             };
@@ -91,7 +91,7 @@ export class WebSocketManager {
         });
     }
 
-    public async triggerSubscription(streamName, triggerKey) {
+    public async triggerSubscription(streamName: string, triggerKey: 'SUBSCRIBE' | 'UNSUBSCRIBE') {
         await this.waitForOpenConnection()
         const message = {
             method: triggerKey,
