@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import styled from 'styled-components'
 import {WebSocketManager} from "../services/webSocketManager";
 import {Ticker} from "../types";
+import {LoadingSpinner} from './LoadingSpinner'
 
 const Container = styled.div`
   border-radius: 8px;
@@ -70,6 +71,7 @@ const PriceChange = styled('span')<{ positive: boolean }>`
 
 const TickerTable: React.FC = () => {
     const [tickers, setTickers] = useState<Ticker[]>([])
+    const [loading, setLoading] = useState<boolean>(true);
 
 
     useEffect(() => {
@@ -79,6 +81,7 @@ const TickerTable: React.FC = () => {
         const handleData = (data: Ticker[]) => {
             if (Array.isArray(data)) {
                 setTickers(data)
+                setLoading(false)
             }
         }
 
@@ -92,36 +95,39 @@ const TickerTable: React.FC = () => {
         }
 
 
-    },[])
+    }, [])
 
     return (
         <Container>
-            <Table>
-                <tbody>
-                {
-                    tickers.map(ticker => {
-                        return (
-                            <Tr key={ticker.s}>
-                                <Td>
-                                    {ticker.s}
-                                    <br/>
-                                    <Text>
-                                        Perpetual
-                                    </Text>
-                                </Td>
-                                <Td>
-                                    {ticker.c}
-                                    <br/>
-                                    <PriceChange positive={parseFloat(ticker.P) >= 0}>
-                                        {ticker.P}%
-                                    </PriceChange>
-                                </Td>
-                            </Tr>
-                        )
-                    })
-                }
-                </tbody>
-            </Table>
+            {
+                loading ? <LoadingSpinner/> : <Table>
+                    <tbody>
+                    {
+                        tickers.map(ticker => {
+                            return (
+                                <Tr key={ticker.s}>
+                                    <Td>
+                                        {ticker.s}
+                                        <br/>
+                                        <Text>
+                                            Perpetual
+                                        </Text>
+                                    </Td>
+                                    <Td>
+                                        {ticker.c}
+                                        <br/>
+                                        <PriceChange positive={parseFloat(ticker.P) >= 0}>
+                                            {ticker.P}%
+                                        </PriceChange>
+                                    </Td>
+                                </Tr>
+                            )
+                        })
+                    }
+                    </tbody>
+                </Table>
+            }
+
         </Container>
     );
 };
