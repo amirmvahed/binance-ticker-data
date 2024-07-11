@@ -52,7 +52,23 @@ export class WebSocketManager {
 
     }
 
-    private waitForOpenConnection(): Promise<any> {
+    public static getInstance(url: string): WebSocketManager {
+        if (!WebSocketManager.instance) {
+            if (WebSocketManager.activeConnections < WebSocketManager.connectionLimit) {
+                WebSocketManager.instance = new WebSocketManager(url)
+                WebSocketManager.activeConnections++
+            } else {
+                throw new Error("WebSocket connection limit reached")
+            }
+        }
+        return WebSocketManager.instance
+    }
+
+    private waitForOpenConnection(): Promise<void> {
+        if (!this.socket) {
+            this.connect();
+        }
+
         return new Promise((resolve, reject) => {
             if (!this.socket) {
                 return reject(new Error('WebSocket connection not initialized'));

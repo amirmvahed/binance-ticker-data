@@ -73,7 +73,8 @@ const TickerTable: React.FC = () => {
 
 
     useEffect(() => {
-        const websocketManager = new WebSocketManager('wss://fstream.binance.com/ws')
+        const websocketManager = WebSocketManager.getInstance('wss://fstream.binance.com/ws')
+        const streamName = '!ticker@arr'
 
         const handleData = (data: Ticker[]) => {
             if (Array.isArray(data)) {
