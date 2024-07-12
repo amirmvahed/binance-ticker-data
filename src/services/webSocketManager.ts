@@ -9,12 +9,11 @@ export class WebSocketManager {
     private idCounter: number = 1;
     private messageListener: MessageListener | null = null
 
-
     private constructor(private url: string) {
         this.connect()
     }
 
-    private connect() {
+    private connect(): void {
         this.socket = new WebSocket(this.url)
 
         this.socket.onopen = () => {
@@ -25,12 +24,29 @@ export class WebSocketManager {
         }
 
         this.socket.onmessage = (event) => {
-            const data: Ticker[] = JSON.parse(event.data)
-            if (this.messageListener) {
-                this.messageListener(data)
-            }
-        }
+            const data: Ticker[] = JSON.parse(event.data);
+            this.handleMessage(data);
+        };
 
+        this.socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+
+        this.socket.onclose = () => {
+            console.log('WebSocket connection closed.');
+            this.reconnect();
+        };
+    }
+
+    private async reconnect(): Promise<void> {
+        this.socket = null;
+        await this.waitForOpenConnection();
+    }
+
+    private handleMessage(data: Ticker[]): void {
+        if (this.messageListener) {
+            this.messageListener(data)
+        }
     }
 
     public static getInstance(url: string): WebSocketManager {
@@ -46,11 +62,25 @@ export class WebSocketManager {
     }
 
     private waitForOpenConnection(): Promise<void> {
-        if (!this.socket) {
-            this.connect();
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            return Promise.resolve()
         }
 
         return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                cleanup();
+                reject(new Error("WebSocket connection timeout"));
+            }, 10000);
+
+            const cleanup = () => {
+                clearTimeout(timeout);
+                if (this.socket) {
+                    this.socket.removeEventListener('open', handleOpen);
+                    this.socket.removeEventListener('error', handleError);
+                    this.socket.removeEventListener('close', handleClose);
+                }
+            };
+
             const handleOpen = () => {
                 cleanup();
                 resolve();
@@ -66,48 +96,32 @@ export class WebSocketManager {
                 reject(new Error("WebSocket connection closed"));
             };
 
-            const timeout = setTimeout(() => {
-                cleanup();
-                reject(new Error("WebSocket connection timeout"));
-            }, 10000); // 10 seconds timeout
-
-            const cleanup = () => {
-                clearTimeout(timeout);
-                this.socket!.removeEventListener('open', handleOpen);
-                this.socket!.removeEventListener('error', handleError);
-                this.socket!.removeEventListener('close', handleClose);
-            };
-
-            if (this.socket!.readyState === WebSocket.OPEN) {
-                resolve();
-            } else if (this.socket!.readyState === WebSocket.CLOSED || this.socket!.readyState === WebSocket.CLOSING) {
-                cleanup();
-                reject(new Error("WebSocket connection is closed"));
+            if (!this.socket) {
+                this.connect();
             } else {
-                this.socket!.addEventListener('open', handleOpen);
-                this.socket!.addEventListener('error', handleError);
-                this.socket!.addEventListener('close', handleClose);
+                this.socket.addEventListener('open', handleOpen);
+                this.socket.addEventListener('error', handleError);
+                this.socket.addEventListener('close', handleClose);
             }
         });
     }
 
-    public async triggerSubscription(streamName: string, triggerKey: 'SUBSCRIBE' | 'UNSUBSCRIBE') {
+    public async triggerSubscription(streamName: string, triggerKey: 'SUBSCRIBE' | 'UNSUBSCRIBE'): Promise<void> {
         await this.waitForOpenConnection()
         const message = {
             method: triggerKey,
             params: [streamName],
             id: this.idCounter++
-        }
+        };
 
         this.socket?.send(JSON.stringify(message))
     }
 
-    public setMessageListener(listener: MessageListener) {
+    public setMessageListener(listener: MessageListener): void {
         this.messageListener = listener
     }
 
-    public removeMessageListener() {
+    public removeMessageListener(): void {
         this.messageListener = null
     }
-
 }
